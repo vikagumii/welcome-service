@@ -1,0 +1,51 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  labels:
+    io.kompose.service: data
+  name: data
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      io.kompose.service: data
+  template:
+    metadata:
+      labels:
+        io.kompose.service: data
+        io.kompose.network/myapp: "true"
+    spec:
+      containers:
+      - env:
+        - name: MYSQL_ALLOW_EMPTY_PASSWORD
+          value: "yes"
+        - name: MYSQL_DATABASE
+          value: mydatabase
+        - name: MYSQL_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: data
+              key: MYSQL_PASSWORD
+        - name: MYSQL_ROOT_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: data
+              key: MYSQL_ROOT_PASSWORD
+        volumeMounts:
+        - name: data-storage
+          mountPath: /var/lib/my
+        image: vikagumi/quotes-data:v1
+        name: db
+        ports:
+        - containerPort: 3306
+  volumeClaimTemplates: # this automatically created pvc and pv and ebs volume
+   - metadata:
+       name: data-storage
+     spec:
+      accessModes: ["ReadWriteOnce"]
+      storageClassName: mysql-gp2
+      resources:
+        requests:
+          storage: 1Gi
+
+

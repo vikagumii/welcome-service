@@ -1,0 +1,43 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    io.kompose.service: data-script
+  name: data-script
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      io.kompose.service: data-script
+  template:
+    metadata:
+      labels:
+        io.kompose.network/myapp: "true"
+        io.kompose.service: data-script
+    spec:
+      containers:
+      - image: vikagumi/quotes-data-script:v2
+        name: data-script
+        envFrom:
+        - secretRef:
+            name: data-script
+      initContainers:
+      - name: check
+        image: mysql
+        command: ['sh', '-c', "until mysql -h ${MYSQL_DB_HOST} -u ${MYSQL_USER} -p${MYSQL_USER_PASSWORD} -e 'show databases;'; do echo waiting for mydb; sleep 2; done"]
+        env:
+        - name: MYSQL_ALLOW_EMPTY_PASSWORD
+          value: "yes"
+        - name: MYSQL_DB_HOST
+          value: data
+        - name: MYSQL_USER
+          valueFrom:
+            secretKeyRef:
+              name: data-script
+              key: MYSQL_USER
+        - name: MYSQL_USER_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: data-script
+              key: MYSQL_USER_PASSWORD
+

@@ -1,0 +1,26 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    io.kompose.service: back
+  name: api
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      io.kompose.service: back
+  template:
+    metadata:
+      labels:
+        io.kompose.service: back
+        io.kompose.network/myapp: "true"
+    spec:
+      containers:
+      - image: vikagumi/quotes-back:v2
+        name: api
+        ports:
+        - containerPort: 3000
+        envFrom:
+        - secretRef:
+            name: back
+
